@@ -16,15 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "TSL2591.h"
+
+//#include "TSL2591.h"
 #include "VEML6070.h"
 
-VEML6070 uv();
+VEML6070 blue = VEML6070();
 
  void setup(){
-
+ 	Serial.begin(115200);
+ 	blue.init(VEML6070_SINGLE);
  }
 
  void loop(){
+ 	Serial.print("blue: ");
+ 	Serial.println(blue.read());
+
+	delay(500);
 
  }
