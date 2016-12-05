@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#include "TSL2591.h"
+#include "TSL2591.h"
 #include "VEML6070.h"
 
 VEML6070 blue = VEML6070();

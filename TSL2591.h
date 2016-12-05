@@ -23,6 +23,13 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+//I2C address of the sensor
+#define TSL2591_ADDRESS						0x29			//I2C adress of the sensor
+
+//Defaults command bytes
+#define TSL2591_COMMAND_NORMAL				0xA0			//Bit 7 for command, 5 for normal
+#define TSL2591_COMMAND_SPECIAL				0xB0			//Bit 7 for command, 5 and 4 for special function
+
 //Addresses for the sensor control registers
 #define TSL2591_ADDR_ENABLE					0x00
 #define TSL2591_ADDR_CONFIG					0x01
@@ -45,10 +52,10 @@
 #define TSL2591_CONTROL_ATIME				(1 << 0)		//Mesuring time setting
 
 //control register gain values
-#define TSL2591_CONTROL_GAIN_LOW			0x00			//Values for gain setting above
-#define TSL2591_CONTROL_GAIN_MEDIUM			0x01
-#define TSL2591_CONTROL_GAIN_HIGH			0x02
-#define TSL2591_CONTROL_GAIN_MAX			0x03
+#define TSL2591_CONTROL_GAIN_LOW			0x00 << 4		//Values for gain setting above
+#define TSL2591_CONTROL_GAIN_MEDIUM			0x01 << 4
+#define TSL2591_CONTROL_GAIN_HIGH			0x02 << 4
+#define TSL2591_CONTROL_GAIN_MAX			0x03 << 4
 
 //control register time values
 #define TSL2591_CONTROL_TIME_100			0x00			//Values for time setting above
@@ -69,17 +76,30 @@ public:
 	TSL2591();
 	~TSL2591();
 
+	void init();
+
+	void enable();
+	void disable();
+
 	void setTiming(byte);
 	void setGain(byte);
 
-	void readFull();
-	void readLight();
-	void readIr();
-
+	unsigned int readFull();
+	unsigned int readLight();
+	unsigned int readIr();
 
 protected:
+	void write(byte);
+	void write(byte, byte);
+	byte read(byte);
+	unsigned int readInt(byte);
 
 private:
+	byte gain;
+	byte time;
+
+	int ir;
+	int visible;
 
 };
 

@@ -17,6 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * This class manage communication between Arduino and an VEML 6070 uv sensor.
+ * Start by calling an instance of the class, like:
+ * VEML6070 sensor = VEML6070;
+ * Then call the init function without or with an argument to set sensivity:
+ * sensor.init();
+ * sensot.init(VEML6070_DOUBLE);
+ * Once done, every function can be called when needed.
+ * There is an interrupt on the sensor tha can be set, see documentation if needed.
+ * The sensor can be shut down to save current when not used. call
+ * sensor.shutdown(true); to shut down,
+ * sensor.shutdown(false); to wake up.
+ */
+
 #ifndef VEML6070_H
 #define VEML6070_H
 
@@ -53,16 +67,20 @@ public:
 
 	void init(byte _sensivity = VEML6070_SINGLE);
 
+	void enable();
+	void disable();
+
 	void setSensivity(byte);
 	void setAck(bool);
 	void setAckTh(bool);
 	void setShutdown(bool);
 
 	unsigned int read();
+	unsigned int lastReading() const;
 
 protected:
 
-	void _set(bool, bool, byte, bool);
+	void _set(bool, bool, byte, bool) const;
 
 private:
 	unsigned int value;

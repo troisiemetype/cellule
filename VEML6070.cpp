@@ -20,14 +20,14 @@
 #include "VEML6070.h"
 
 //Defaut constructor of the class
-VEML6070::VEML6070(){
+VEML6070::VEML6070():sensivity(1), ack(false), ack_th(false), shutdown(false), value(0)
+{
 	//Set the default sensivity. The datasheet advise to run first at 1, and change if needed
-	sensivity = 1;
-	ack = false;
-	ack_th = false;
-	shutdown = false;
+}
 
-	value = 0;
+//class destructor
+VEML6070::~VEML6070(){
+	setShutdown(true);
 }
 
 //Constructor with sensivity passed as arg.
@@ -45,13 +45,16 @@ void VEML6070::init(byte _sensivity){
 	delay(200);
 }
 
-//class destructor
-VEML6070::~VEML6070(){
+void VEML6070::enable(){
+	setShutdown(false);
+}
+
+void VEML6070::disable(){
 	setShutdown(true);
 }
 
 //send a init command
-void VEML6070::_set(bool _ack, bool _ack_th, byte _sens, bool _shutdown){
+void VEML6070::_set(bool _ack, bool _ack_th, byte _sens, bool _shutdown) const{
 	byte init_byte = VEML6070_DEFAULT;
 
 	init_byte |= _ack && VEML6070_ACK;
@@ -69,26 +72,29 @@ void VEML6070::_set(bool _ack, bool _ack_th, byte _sens, bool _shutdown){
 //Convenience function to change only sensivity
 void VEML6070::setSensivity(byte value){
 	_set(ack, ack_th, value, shutdown);
+	sensivity = value;
 }
 
 //Convenience function to change only Ack
 void VEML6070::setAck(bool value){
 	_set(value, ack_th, sensivity, shutdown);
+	ack = value;
 }
 
 //Convenience function to change only Ack threshold
 void VEML6070::setAckTh(bool value){
 	_set(ack, value, sensivity, shutdown);
+	ack_th = value;
 }
 
 //Convenience function to change only shutdown
 void VEML6070::setShutdown(bool value){
 	_set(ack, ack_th, sensivity, value);
+	shutdown = value;
 }
 
 //Read value from the sensor
 unsigned int VEML6070::read(){
-	value = 0;
 
 	Wire.requestFrom(VEML6070_MSB, 1);
 
@@ -98,6 +104,11 @@ unsigned int VEML6070::read(){
 	Wire.requestFrom(VEML6070_LSB, 1);
 	value |= Wire.read();
 
+	return value;
+}
+
+//Get the last value read
+unsigned int VEML6070::lastReading() const{
 	return value;
 }
 
