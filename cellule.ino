@@ -20,17 +20,36 @@
 #include "TSL2591.h"
 #include "VEML6070.h"
 
+TSL2591 light = TSL2591();
 VEML6070 blue = VEML6070();
 
  void setup(){
  	Serial.begin(115200);
- 	blue.init(VEML6070_SINGLE);
+
+ 	Serial.println("started");
+ 	Serial.println("");
+
+ 	light.init();
+ 	light.setGain(TSL2591_CONTROL_GAIN_MEDIUM);
+ 	light.setTime(TSL2591_CONTROL_TIME_300);
+ 	delay(500);
  }
 
  void loop(){
+ 	
  	Serial.print("blue: ");
  	Serial.println(blue.read());
 
-	delay(500);
+ 	Serial.print("full: ");
+ 	Serial.println(light.readFull());
 
+ 	Serial.print("light: ");
+ 	Serial.println(light.readLight());
+
+ 	Serial.print("IR: ");
+ 	Serial.println(light.readIr());
+
+ 	Serial.println("");
+	delay(500);
+	
  }

@@ -1,0 +1,39 @@
+time 100
+
+full: 1415
+light: 834
+IR: 581
+
+
+time 200
+
+full: 2805
+light: 1656
+IR: 1149
+
+
+time 300
+
+full: 4231
+light: 2499
+IR: 1732
+
+time 400
+
+full: 5613
+light: 3320
+IR: 2293
+
+
+time 500
+
+full: 7011
+light: 4152
+IR: 2859
+
+
+time 600
+
+full: 8406
+light: 4978
+IR: 3428

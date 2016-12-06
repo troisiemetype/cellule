@@ -81,7 +81,7 @@ public:
 	void enable();
 	void disable();
 
-	void setTiming(byte);
+	void setTime(byte);
 	void setGain(byte);
 
 	unsigned int readFull();
@@ -100,6 +100,7 @@ private:
 
 	int ir;
 	int visible;
+	int full;
 
 };
 

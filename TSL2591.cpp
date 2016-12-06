@@ -19,7 +19,7 @@
 
 #include "TSL2591.h"
 
-TSL2591::TSL2591():gain(TSL2591_CONTROL_GAIN_MEDIUM), time(TSL2591_CONTROL_TIME_200), ir(0), visible(0)
+TSL2591::TSL2591():gain(TSL2591_CONTROL_GAIN_MEDIUM), time(TSL2591_CONTROL_TIME_200), ir(0), visible(0), full(0)
 {
 	//Connect to I2C
 	Wire.begin();
@@ -37,7 +37,7 @@ void TSL2591::init(){
 	//Enable the sensor
 	enable();
 	//Set timing and gain (two functions for convenience, but they do the same)
-	setTiming(time);
+	setTime(time);
 
 }
 
@@ -52,8 +52,8 @@ void TSL2591::disable(){
 	write(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_ENABLE, 0);
 }
 
-void TSL2591::setTiming(byte _timing){
-	time = _timing;
+void TSL2591::setTime(byte _time){
+	time = _time;
 	write(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CONFIG, gain | time);
 }
 
@@ -63,16 +63,19 @@ void TSL2591::setGain(byte _gain){
 }
 
 unsigned int TSL2591::readFull(){
-	unsigned int lsb = read(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CH0_LSB);
+	full = readInt(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CH0_LSB);
+	return full;
 
 }
 
 unsigned int TSL2591::readLight(){
-
+	visible = readFull() - readIr();
+	return visible;
 }
 
 unsigned int TSL2591::readIr(){
-
+	ir = readInt(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CH1_LSB);
+	return ir;
 }
 
 void TSL2591::write(byte reg){
