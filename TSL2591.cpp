@@ -19,11 +19,19 @@
 
 #include "TSL2591.h"
 
-TSL2591::TSL2591():gain(TSL2591_CONTROL_GAIN_MEDIUM), time(TSL2591_CONTROL_TIME_200), ir(0), visible(0), full(0)
+TSL2591::TSL2591():
+gain(1),
+time(TSL2591_CONTROL_TIME_200),
+ir(0),
+visible(0),
+full(0),
+ev(0),
+gainCoef({1, 25, 415}),
+gainReg({TSL2591_CONTROL_GAIN_LOW, TSL2591_CONTROL_GAIN_MEDIUM, TSL2591_CONTROL_GAIN_HIGH})
 {
 	//Connect to I2C
 	Wire.begin();
-
+//	updateCpl();
 }
 
 TSL2591::~TSL2591(){
@@ -54,18 +62,53 @@ void TSL2591::disable(){
 
 void TSL2591::setTime(byte _time){
 	time = _time;
-	write(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CONFIG, gain | time);
+	write(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CONFIG, gainReg[gain] | time);
 }
 
 void TSL2591::setGain(byte _gain){
 	gain = _gain;
-	write(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CONFIG, gain | time);
+	write(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CONFIG, gainReg[gain] | time);
+}
+
+//Update reading. Signal overflow
+int TSL2591::update(){
+	full = readFull();
+	ir = readIr();
+	//Test for over/underflow. Change gain if needed
+
+	if((gain < 2) && (full < 1000)){
+		gain++;
+		setGain(gain);
+	} else if((gain > 0) && (full > 60000)){
+		gain--;
+		setGain(gain);
+	}
+
+	delay(600);
+
+/*
+	Serial.print("gain: ");
+	Serial.println(gain);
+
+	updateCpl();
+	
+	Serial.print("full: ");
+	Serial.println(readFull());
+
+	Serial.print("light: ");
+	Serial.println(readLight());
+
+	Serial.print("IR: ");
+	Serial.println(readIr());
+
+	Serial.println("");
+*/
+	return gain;
 }
 
 unsigned int TSL2591::readFull(){
 	full = readInt(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CH0_LSB);
 	return full;
-
 }
 
 unsigned int TSL2591::readLight(){
@@ -76,6 +119,20 @@ unsigned int TSL2591::readLight(){
 unsigned int TSL2591::readIr(){
 	ir = readInt(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CH1_LSB);
 	return ir;
+}
+
+int TSL2591::getEvFull(){
+
+}
+
+int TSL2591::getEvLight(){
+
+}
+
+void TSL2591::updateCpl(){
+	cpl = (float)(gainCoef[gain] * time * 100 + 100) / TSL2591_LUX_CF;
+	Serial.print("cpl: ");
+	Serial.println(cpl);
 }
 
 void TSL2591::write(byte reg){

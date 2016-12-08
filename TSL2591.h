@@ -65,10 +65,35 @@
 #define TSL2591_CONTROL_TIME_500			0x04
 #define TSL2591_CONTROL_TIME_600			0x05
 
+#define TSL2591_STATUS_UNDERFLOW			0
+#define TSL2591_STATUS_OK					1
+#define TSL2591_STATUS_OVERFLOW				2
+
+#define TSL2591_LUX_CF						221				//1W = 220lux @ 500nm (blue/green)
+#define TSL2591_LUX_CH0						
+#define TSL2591_LUX_CH1
 
 
-
-
+typedef enum TSL2591_evs{
+	EV0,
+	EV2,
+	EV3,
+	EV4,
+	EV5,
+	EV6,
+	EV7,
+	EV8,
+	EV9,
+	EV10,
+	EV11,
+	EV12,
+	EV13,
+	EV14,
+	EV15,
+	EV16,
+	EV17,
+	EV18
+}evs;
 
 class TSL2591{
 public:
@@ -84,11 +109,17 @@ public:
 	void setTime(byte);
 	void setGain(byte);
 
+	int update();
+
 	unsigned int readFull();
 	unsigned int readLight();
 	unsigned int readIr();
 
+	int getEvFull();
+	int getEvLight();
+
 protected:
+	void updateCpl();
 	void write(byte);
 	void write(byte, byte);
 	byte read(byte);
@@ -96,11 +127,20 @@ protected:
 
 private:
 	byte gain;
-	byte time;
+	byte gainCoef[3];
+	int gainReg[3];
 
-	int ir;
-	int visible;
-	int full;
+	byte time;
+	byte timeCoef[6];
+	int timeReg[6];
+
+	float cpl;
+
+	unsigned int ir;
+	unsigned int visible;
+	unsigned int full;
+
+	int ev;
 
 };
 
