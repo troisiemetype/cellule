@@ -26,7 +26,7 @@ ir(0),
 visible(0),
 full(0),
 ev(0),
-gainCoef({1, 25, 415}),
+gainCoef({1, 24.5F, 400}),
 gainReg({TSL2591_CONTROL_GAIN_LOW, TSL2591_CONTROL_GAIN_MEDIUM, TSL2591_CONTROL_GAIN_HIGH})
 {
 	//Connect to I2C
@@ -46,7 +46,6 @@ void TSL2591::init(){
 	enable();
 	//Set timing and gain (two functions for convenience, but they do the same)
 	setTime(time);
-
 }
 
 //Enable the sensor
@@ -63,11 +62,13 @@ void TSL2591::disable(){
 void TSL2591::setTime(byte _time){
 	time = _time;
 	write(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CONFIG, gainReg[gain] | time);
+	updateCpl();
 }
 
 void TSL2591::setGain(byte _gain){
 	gain = _gain;
 	write(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CONFIG, gainReg[gain] | time);
+	updateCpl();
 }
 
 //Update reading. Signal overflow
@@ -76,21 +77,19 @@ int TSL2591::update(){
 	ir = readIr();
 	//Test for over/underflow. Change gain if needed
 
-	if((gain < 2) && (full < 1000)){
+	if((gain < 2) && (full < 500)){
 		gain++;
 		setGain(gain);
-	} else if((gain > 0) && (full > 60000)){
+		delay(250);
+	} else if((gain > 0) && (full > 63000)){
 		gain--;
 		setGain(gain);
+		delay(250);
 	}
-
-	delay(600);
 
 /*
 	Serial.print("gain: ");
 	Serial.println(gain);
-
-	updateCpl();
 	
 	Serial.print("full: ");
 	Serial.println(readFull());
@@ -112,7 +111,9 @@ unsigned int TSL2591::readFull(){
 }
 
 unsigned int TSL2591::readLight(){
-	visible = readFull() - readIr();
+	readFull();
+	readIr();
+	visible = full - ir;
 	return visible;
 }
 
@@ -121,18 +122,27 @@ unsigned int TSL2591::readIr(){
 	return ir;
 }
 
-int TSL2591::getEvFull(){
+unsigned long TSL2591::getLuxFull(){
+	luxFull = ((float)full)/cpl;
+	return luxFull;
 
 }
 
-int TSL2591::getEvLight(){
+unsigned long TSL2591::getLux(){
+	luxLight = ((float)full - TSL2591_LUX_CH1_CF1 * (float)ir)/cpl;
+	return luxLight;
 
+}
+
+float TSL2591::getRatio(){
+	return (float)ir / (float)full;
 }
 
 void TSL2591::updateCpl(){
-	cpl = (float)(gainCoef[gain] * time * 100 + 100) / TSL2591_LUX_CF;
-	Serial.print("cpl: ");
-	Serial.println(cpl);
+	cpl = (float)((time + 1) * 100) / (TSL2591_COUNT_PER_LUX * TSL2591_W_PER_LUMEN);
+	cpl *= gainCoef[gain];
+//	Serial.print("cpl: ");
+//	Serial.println(cpl);
 }
 
 void TSL2591::write(byte reg){

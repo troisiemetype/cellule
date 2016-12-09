@@ -23,9 +23,6 @@
 TSL2591 light = TSL2591();
 //VEML6070 blue = VEML6070();
 
-int visible = 0;
-int gain = 1;
-
 void setup(){
 	Serial.begin(115200);
 
@@ -33,18 +30,21 @@ void setup(){
 	Serial.println("");
 
 	light.init();
-	light.setGain(gain);
-	light.setTime(TSL2591_CONTROL_TIME_200);
 
 	delay(500);
+
 }
 
 void loop(){
 //	Serial.print("blue: ");
 //	Serial.println(blue.read());
 
-	light.update();
-/*	
+//	Serial.print("Gain: ");
+//	Serial.println(light.update());
+/*
+	Serial.print("ratio: ");
+	Serial.println(light.getRatio());
+	
 	Serial.print("full: ");
 	Serial.println(light.readFull());
 
@@ -54,10 +54,25 @@ void loop(){
 	Serial.print("IR: ");
 	Serial.println(light.readIr());
 
+	Serial.print("lux full: ");
+	Serial.println(light.getLuxFull());
+
+	Serial.print("lux light: ");
+	Serial.println(light.getLuxLight());
+
 	Serial.println("");
-	*/
+*/
+
+	light.update();
+
+	Serial.println(ev());
+
+
+
 	delay(500);
+}
 
-
+float ev(){
+	return log(light.getLux()) / log(2);
 }
 

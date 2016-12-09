@@ -69,31 +69,12 @@
 #define TSL2591_STATUS_OK					1
 #define TSL2591_STATUS_OVERFLOW				2
 
-#define TSL2591_LUX_CF						221				//1W = 220lux @ 500nm (blue/green)
-#define TSL2591_LUX_CH0						
-#define TSL2591_LUX_CH1
-
-
-typedef enum TSL2591_evs{
-	EV0,
-	EV2,
-	EV3,
-	EV4,
-	EV5,
-	EV6,
-	EV7,
-	EV8,
-	EV9,
-	EV10,
-	EV11,
-	EV12,
-	EV13,
-	EV14,
-	EV15,
-	EV16,
-	EV17,
-	EV18
-}evs;
+#define TSL2591_COUNT_PER_LUX				38.649F			//Number of ALS counts for one lux
+#define TSL2591_W_PER_LUMEN					338.0F			//73 lumen per W for 650nm
+#define TSL2591_LUX_DF						38000			//Coef to compute CPL
+#define TSL2591_LUX_CH1_CF1					2.1F			//Coef for sun light
+#define TSL2591_LUX_CH0_CF2					0.59F			//Coef for tungsten light
+#define TSL2591_LUX_CH1_CF2					0.86F			//Coef for tungsten light
 
 class TSL2591{
 public:
@@ -115,8 +96,10 @@ public:
 	unsigned int readLight();
 	unsigned int readIr();
 
-	int getEvFull();
-	int getEvLight();
+	unsigned long getLuxFull();
+	unsigned long getLux();
+
+	float getRatio();
 
 protected:
 	void updateCpl();
@@ -127,11 +110,11 @@ protected:
 
 private:
 	byte gain;
-	byte gainCoef[3];
+	float gainCoef[3];
 	int gainReg[3];
 
 	byte time;
-	byte timeCoef[6];
+	int timeCoef[6];
 	int timeReg[6];
 
 	float cpl;
@@ -140,7 +123,9 @@ private:
 	unsigned int visible;
 	unsigned int full;
 
-	int ev;
+	unsigned int ev;
+	unsigned long luxFull;
+	unsigned long luxLight;
 
 };
 
