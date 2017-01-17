@@ -39,7 +39,7 @@
 #define SPEED_MINUTES 		2
 
 #define LINE_OFFSET			2
-#define FONT_OFFSET 		19
+#define FONT_OFFSET 		16
 
 
 class Display{
@@ -49,12 +49,23 @@ public:
 	void begin();
 
 	void update();
+	void clear();
+	void off();
 
 	void updateAperture(float value);
 	void updateSpeed(int value, byte mode = 0);
 	void updateIso(float value);
 	void updateEV(float value);
+	void updateIR(int value);
+	void updateUV(int value);
 	void updateMode(byte mode);
+
+	void showBars(bool value);
+
+	void updateBarEV(float value);
+	void updateBarIR(float value);
+	void updateBarUV(float value);
+
 	void drawLogo(byte x, byte y, byte size);
 
 	void updateGain(int gain);

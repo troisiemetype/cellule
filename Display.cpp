@@ -41,19 +41,40 @@ void Display::begin(){
 	_display.setRotation(1);
 
 	//Debugging purpose: set a rule on the left border, used to count rows
+/*	
 	for (byte i = 0; i < 64; i++){
 		_display.drawPixel(63, 2 * i, WHITE);
 	}
 	for (byte i = 0; i < 13; i++){
 		_display.drawPixel(62, 10 * i, WHITE);
 	}
+*/
+	//Display a rule on the right side, to mesure ev.
+	//
+	for (byte i = 0; i < 22; i++){
+		_display.drawPixel(62, 127 - (6 * i), WHITE);
+		if(i == 2 || i == 12 || i == 18){
+			_display.drawPixel(63, 127 - (6 * i), WHITE);
+		}
+	}
 
+//	showBars(true);
+
+
+}
+
+void Display::off(){
+	_display.ssd1306_command(SSD1306_DISPLAYOFF);
 }
 
 void Display::update(){
 	_display.display();
 	_cursor = 1;
 	_display.setCursor(0, _cursor);
+}
+
+void Display::clear(){
+	_display.clearDisplay();
 }
 
 //Update the aperture value on display
@@ -125,6 +146,28 @@ void Display::updateEV(float value){
 
 }
 
+void Display::updateIR(int value){
+	_display.setFont();
+	_display.setCursor(0, _cursor);
+	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
+	_display.print("IR ");
+	_display.println(value);
+
+	_cursor = _display.getCursorY() + LINE_OFFSET;
+
+}
+
+void Display::updateUV(int value){
+	_display.setFont();
+	_display.setCursor(0, _cursor);
+	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
+	_display.print("UV ");
+	_display.println(value);
+
+	_cursor = _display.getCursorY() + LINE_OFFSET;
+
+}
+
 void Display::updateMode(byte mode){
 	_display.setFont();
 	_display.setCursor(0, _cursor);
@@ -142,8 +185,38 @@ void Display::updateMode(byte mode){
 
 //	_display.display();
 
+}
 
+void Display::showBars(bool value){
+	unsigned char tempCursor = _display.getCursorY();
 
+	_display.setCursor(30, 98);
+	_display.println("UV");
+	_display.println("EV");
+	_display.println("IR");
+
+	_display.drawFastHLine(40, 101, 16, WHITE);
+	_display.drawFastHLine(40, 110, 19, WHITE);
+	_display.drawFastHLine(40, 118, 22, WHITE);
+
+	_display.drawFastVLine(55, 95, 6, WHITE);
+	_display.drawFastVLine(58, 95, 15, WHITE);
+	_display.drawFastVLine(61, 95, 24, WHITE);
+
+}
+
+void Display::updateBarEV(float value){
+	_display.fillRect(60, 0, 2, 128, BLACK);
+	byte height = (value + 2) * 6;
+	_display.fillRect(60, 128 - height, 2, height, WHITE);
+}
+
+void Display::updateBarIR(float value){
+	
+}
+
+void Display::updateBarUV(float value){
+	
 }
 
 void Display::drawLogo(byte x, byte y, byte size){

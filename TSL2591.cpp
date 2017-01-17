@@ -88,7 +88,7 @@ int TSL2591::update(){
 //		delay(250);
 	}
 
-
+/*
 	Serial.print("gain: ");
 	Serial.println(gain);
 	
@@ -101,8 +101,8 @@ int TSL2591::update(){
 	Serial.print("IR: ");
 	Serial.println(readIr());
 
-	Serial.println("");
-
+	Serial.println();
+*/
 	return gain;
 }
 
