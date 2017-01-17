@@ -65,16 +65,20 @@
 #define TSL2591_CONTROL_TIME_500			0x04
 #define TSL2591_CONTROL_TIME_600			0x05
 
-#define TSL2591_STATUS_UNDERFLOW			0
-#define TSL2591_STATUS_OK					1
-#define TSL2591_STATUS_OVERFLOW				2
-
+//values for lux computing
 #define TSL2591_COUNT_PER_LUX				38.649F			//Number of ALS counts for one lux
 #define TSL2591_W_PER_LUMEN					338.0F			//73 lumen per W for 650nm
 #define TSL2591_LUX_DF						38000			//Coef to compute CPL
 #define TSL2591_LUX_CH1_CF1					2.1F			//Coef for sun light
 #define TSL2591_LUX_CH0_CF2					0.59F			//Coef for tungsten light
 #define TSL2591_LUX_CH1_CF2					0.86F			//Coef for tungsten light
+
+
+#define TSL2591_DF 							408
+#define TSL2591_COEFB 						1.64F
+#define TSL2591_COEFC 						0.59F
+#define TSL2591_COEFD 						0.86F
+
 
 class TSL2591{
 public:
@@ -102,6 +106,7 @@ public:
 	float getRatio();
 
 protected:
+	
 	void updateCpl();
 	void write(byte);
 	void write(byte, byte);
@@ -109,6 +114,7 @@ protected:
 	unsigned int readInt(byte);
 
 private:
+
 	byte gain;
 	float gainCoef[3];
 	int gainReg[3];

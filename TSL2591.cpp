@@ -26,16 +26,15 @@ ir(0),
 visible(0),
 full(0),
 ev(0),
-gainCoef({1, 24.5F, 400}),
-gainReg({TSL2591_CONTROL_GAIN_LOW, TSL2591_CONTROL_GAIN_MEDIUM, TSL2591_CONTROL_GAIN_HIGH})
+gainCoef{1, 24, 384},
+gainReg{TSL2591_CONTROL_GAIN_LOW, TSL2591_CONTROL_GAIN_MEDIUM, TSL2591_CONTROL_GAIN_HIGH}
 {
 	//Connect to I2C
 	Wire.begin();
-//	updateCpl();
 }
 
 TSL2591::~TSL2591(){
-
+	disable();
 }
 
 void TSL2591::init(){
@@ -59,12 +58,14 @@ void TSL2591::disable(){
 	write(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_ENABLE, 0);
 }
 
+//Set integration time
 void TSL2591::setTime(byte _time){
 	time = _time;
 	write(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CONFIG, gainReg[gain] | time);
 	updateCpl();
 }
 
+//Set integration gain
 void TSL2591::setGain(byte _gain){
 	gain = _gain;
 	write(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CONFIG, gainReg[gain] | time);
@@ -75,19 +76,19 @@ void TSL2591::setGain(byte _gain){
 int TSL2591::update(){
 	full = readFull();
 	ir = readIr();
-	//Test for over/underflow. Change gain if needed
 
+	//Test for over/underflow. Change gain if needed
 	if((gain < 2) && (full < 500)){
 		gain++;
 		setGain(gain);
-		delay(250);
+//		delay(250);
 	} else if((gain > 0) && (full > 63000)){
 		gain--;
 		setGain(gain);
-		delay(250);
+//		delay(250);
 	}
 
-/*
+
 	Serial.print("gain: ");
 	Serial.println(gain);
 	
@@ -101,15 +102,17 @@ int TSL2591::update(){
 	Serial.println(readIr());
 
 	Serial.println("");
-*/
+
 	return gain;
 }
 
+//Get a read of channel 0 (visible + IR)
 unsigned int TSL2591::readFull(){
 	full = readInt(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CH0_LSB);
 	return full;
 }
 
+//Get the difference between visible and IR
 unsigned int TSL2591::readLight(){
 	readFull();
 	readIr();
@@ -117,32 +120,59 @@ unsigned int TSL2591::readLight(){
 	return visible;
 }
 
+//Get a read of channel 1 (IR only)
 unsigned int TSL2591::readIr(){
 	ir = readInt(TSL2591_COMMAND_NORMAL | TSL2591_ADDR_CH1_LSB);
 	return ir;
 }
 
+//Get the lux value of channel 0 only (full)
 unsigned long TSL2591::getLuxFull(){
 	luxFull = ((float)full)/cpl;
 	return luxFull;
 
 }
 
+//Get the lux value, with full and IR pondered
 unsigned long TSL2591::getLux(){
-	luxLight = ((float)full - TSL2591_LUX_CH1_CF1 * (float)ir)/cpl;
+	float lux1;
+	float lux2;
+
+	lux1 = ((float)full - TSL2591_LUX_CH1_CF1 * (float)ir)/cpl;
+	lux2 = ((float)full * TSL2591_LUX_CH0_CF2 - (float)ir * TSL2591_LUX_CH1_CF2)/cpl;
+
+//	lux1 = ((float)full - TSL2591_COEFB * (float)ir) * cpl;
+//	lux2 = (TSL2591_COEFC * (float)full - TSL2591_COEFD * (float)ir) / cpl;
+
+	luxLight = lux1 > lux2 ? lux1 : lux2;
+/*
+	Serial.print("lux 1: ");
+	Serial.println(lux1);
+	Serial.print("lux 2: ");
+	Serial.println(lux2);
+*/
 	return luxLight;
 
 }
 
+//Get the ratio between IR and full
 float TSL2591::getRatio(){
 	return (float)ir / (float)full;
 }
 
+//Update the Count Per Lux ratio
 void TSL2591::updateCpl(){
 	cpl = (float)((time + 1) * 100) / (TSL2591_COUNT_PER_LUX * TSL2591_W_PER_LUMEN);
 	cpl *= gainCoef[gain];
-//	Serial.print("cpl: ");
-//	Serial.println(cpl);
+//	cpl = ((time + 1) * 100) * gainCoef[gain] / TSL2591_DF;
+/*
+	Serial.print("cpl: ");
+	Serial.println(cpl);
+	Serial.print("time: ");
+	Serial.println((time + 1) * 100);
+	Serial.print("gain: ");
+	Serial.println(gainCoef[gain]);
+	*/
 }
 
 void TSL2591::write(byte reg){
