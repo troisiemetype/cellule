@@ -192,6 +192,7 @@ void loop(){
 		// Compute speed and ev.
 		// lv = log(2)(lux) - 1.32
 		// 1.32 is given by the correspondance table between LV and lux.
+		// This way of computing gives a max difference of 0.2 LV from the one using device factor
 		lv = (log(lux) / log(2)) - 1.32;
 		fullLV = lv;
 
@@ -203,7 +204,10 @@ void loop(){
 		ev = fullLV + (log(sensivity[sIndex] / 100) / log(2));
 
 		// Compute speed given aperture and EV
-		speed = 
+		// ev = log(2)(A square / S) = log(2)(A square) - log(2)(S)
+		// log(2)(S) = log(2)(A square) - ev
+		// S = exp(2)(log(2)(A square) - ev)
+		speed = pow(2, ((log(aperture[aIndex]) / log(2)) - ev));
 
 /*
 		// First version, before lv pre-compute
