@@ -24,10 +24,13 @@
 
 #include "Display.h"
 
+#include "Encoder.h"
+#include "PushButton.h"
+
 //This is used to correct the lux value and get the correct aperture and speed
 #define DEVICE_FACTOR 		280
 
-#define SLEEP_DELAY 		5000
+#define SLEEP_DELAY 		30000
 
 #define MODE_PHOTO 			0
 #define MODE_COLLODION 		1
@@ -47,7 +50,7 @@ int speeds[13] = {2, 4, 8, 15, 30, 60, 125, 250, 500, 1000, 2000, 4000, 8000};
 float speed = 1;
 unsigned char speedMode = 0;
 
-//vars for lus, ir and uv.
+//vars for lux, ir and uv.
 float lux = 0;
 float ir = 0;
 float uv = 0;
@@ -71,20 +74,34 @@ int mesureDelay = 0;
 long sleepDelay = millis();
 
 TSL2591 light = TSL2591();
-//VEML6070 blue = VEML6070();
+VEML6070 blue = VEML6070();
 
 Display display = Display();
 
-void setup(){
+Encoder wheel = Encoder();
 
-	pinMode(2, INPUT_PULLUP);
-	pinMode(3, INPUT_PULLUP);
+PushButton btnIso = PushButton();
+PushButton btnMenu = PushButton();
+PushButton btnHold = PushButton();
+
+void setup(){
 
 	Serial.begin(115200);
 
+	// Init encoder
+	wheel.begin(4, 5, Encoder::QUAD_STEP);
+	wheel.setDebounceDelay(10);
+	wheel.reverse();
+
+	// Init buttons.
+	btnIso.begin(6, INPUT_PULLUP);
+	btnMenu.begin(7, INPUT_PULLUP);
+	btnHold.begin(8, INPUT_PULLUP);
+
+
 	initDevices();
 
-	display.drawLogo(0, 0, 10);
+	display.drawLogo(0, 0, 25);
 	display.update();
 
 	//verify the values from eeprom. If not correct, set it to default
@@ -101,6 +118,8 @@ void setup(){
 	//Wait enough for a reading to be made
 	while((millis() - prevMillis) < 1000);
 
+//	Serial.println("started");
+
 
 }
 
@@ -109,6 +128,9 @@ void initDevices(){
 	display.begin();
 
 	light.init();
+
+	blue.init();
+
 }
 
 void loop(){
@@ -135,12 +157,32 @@ void loop(){
 
 	Serial.println("");
 */
+
+	uint8_t update = 0;
+
 	//update reading only if a long enough time (250ms) has elapsed since last reading
 	mesureDelay = millis() - prevMillis;
 	if(mesureDelay > 250){
+		update = 1;
 		prevMillis = millis();
 		light.update();
 		lux = light.getLux();
+	}
+
+	btnIso.update();
+	btnMenu.update();
+	btnHold.update();
+
+	if(wheel.update()){
+		update = 1;
+		int8_t step = wheel.getStep();
+		if(btnIso.isPressed()){
+			if(step < 0 && sIndex > 0) --sIndex;
+			if(step > 0 && sIndex < 13) ++sIndex;
+		} else {
+			if(step < 0 && aIndex > 0) --aIndex;
+			if(step > 0 && aIndex < 19) ++aIndex;
+		}
 	}
 	
 	//Compute speed and ev.
@@ -162,20 +204,11 @@ void loop(){
 		}
 	}
 
-	//Display the updated values.
-	//Todo: update only when the button has been pushed, or the increment wheel turned.
-	display.updateIso(sensivity[sIndex]);
+	if(update == 1) updateDisplay();
 
-	display.updateAperture(aperture[aIndex]);
-	display.updateSpeed(speed, speedMode);
+//	updateDisplay();
 
-//	display.updateGain(light.update());
-
-	display.updateEV(ev);
-	display.updateMode(mode);
-	display.updateBarEV(ev);
-
-	display.update();
+	return;
 
 	//Go to sleep if nothing has been done for some time
 	if((millis() - sleepDelay) > SLEEP_DELAY){
@@ -186,6 +219,32 @@ void loop(){
 
 		sleepDelay = millis();
 	}
+}
+
+void updateDisplay(){
+	//Display the updated values.
+	//Todo: update only when the button has been pushed, or the increment wheel turned.
+	display.clear();
+	display.updateIso(sensivity[sIndex]);
+
+	display.updateMode(mode);
+
+	display.updateAperture(aperture[aIndex]);
+
+	display.updateSpeed(speed, speedMode);
+
+//	display.updateGain(light.update());
+
+	display.updateEV(ev);
+//	display.updateIR(ir);
+	display.updateUV(uv);
+//	display.updateBarEV(ev);
+
+//	display.showBars(0);
+
+	display.update();
+
+
 }
 
 void saveEeprom(){
@@ -202,8 +261,8 @@ void goToSleep(){
 	//disable watchdog timer
 	WDTCSR = 0;
 	//disable Brown Out detector
-	MCUCR |= (1 << BODSE);
-	MCUCR |= (1 << BODS);
+//	MCUCR |= (1 << BODSE);
+//	MCUCR |= (1 << BODS);
 
 	//Set an interrupt ont INT0 to wakeup.
 	EICRA = 0;

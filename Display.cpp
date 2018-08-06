@@ -38,7 +38,7 @@ void Display::begin(){
 	_display.begin();
 	_display.clearDisplay();
 	_display.setTextColor(WHITE);
-	_display.setRotation(1);
+	_display.setRotation(0);
 
 	//Debugging purpose: set a rule on the left border, used to count rows
 /*	
@@ -51,13 +51,14 @@ void Display::begin(){
 */
 	//Display a rule on the right side, to mesure ev.
 	//
+/*
 	for (byte i = 0; i < 22; i++){
 		_display.drawPixel(62, 127 - (6 * i), WHITE);
 		if(i == 2 || i == 12 || i == 18){
 			_display.drawPixel(63, 127 - (6 * i), WHITE);
 		}
 	}
-
+*/
 //	showBars(true);
 
 
@@ -83,13 +84,13 @@ void Display::clear(){
 void Display::updateAperture(float value){
 	_display.setFont(&FreeSerifItalic9pt7b);
 	_cursor += FONT_OFFSET;
-	_display.setCursor(0, _cursor);
-	_display.fillRect(0, _cursor - FONT_OFFSET, 62, 21, BLACK);
+	_display.setCursor(0, 25);
+//	_display.fillRect(0, _cursor - FONT_OFFSET, 62, 21, BLACK);
 	_display.print("f/");
 	if(value == 0.7 || value == 1.4 || value == 2.8 || value == 5.6){
-		_display.println(value, 1);
+		_display.print(value, 1);
 	} else {
-		_display.println(value, 0);
+		_display.print(value, 0);
 	}
 	_cursor = _display.getCursorY() - FONT_OFFSET;
 //	_display.display();
@@ -99,8 +100,8 @@ void Display::updateAperture(float value){
 void Display::updateSpeed(int value, byte mode){
 	_display.setFont(&FreeSerifItalic9pt7b);
 	_cursor += FONT_OFFSET;
-	_display.setCursor(0, _cursor);
-	_display.fillRect(0, _cursor - FONT_OFFSET, 62, 21, BLACK);
+	_display.setCursor(64, 25);
+//	_display.fillRect(0, _cursor - FONT_OFFSET, 62, 21, BLACK);
 	if(mode == SPEED_NORMAL){
 		_display.print("1/");
 	}
@@ -110,7 +111,7 @@ void Display::updateSpeed(int value, byte mode){
 	} else if(mode == SPEED_MINUTES){
 		_display.print("m");
 	}
-	_display.println();
+//	_display.println();
 
 	_cursor = _display.getCursorY() - FONT_OFFSET;
 //	_display.display();
@@ -119,15 +120,16 @@ void Display::updateSpeed(int value, byte mode){
 
 void Display::updateIso(float value){
 	_display.setFont();
-	_display.setCursor(0, _cursor);
-	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
+	_display.setCursor(0, 0);
+//	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
 	_display.print("iso ");
 
 	if((value == 0.7) || (value == 1.5)){
-		_display.println(value, 1);
+		_display.print(value, 1);
 	} else {
-		_display.println(value, 0);
+		_display.print(value, 0);
 	}
+//	_display.println();
 	_cursor = _display.getCursorY() + LINE_OFFSET;
 //	_display.display();
 
@@ -135,8 +137,8 @@ void Display::updateIso(float value){
 
 void Display::updateEV(float value){
 	_display.setFont();
-	_display.setCursor(0, _cursor);
-	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
+	_display.setCursor(0, 35);
+//	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
 	_display.print("EV ");
 	_display.println(value, 1);
 
@@ -148,8 +150,8 @@ void Display::updateEV(float value){
 
 void Display::updateIR(int value){
 	_display.setFont();
-	_display.setCursor(0, _cursor);
-	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
+	_display.setCursor(0, 45);
+//	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
 	_display.print("IR ");
 	_display.println(value);
 
@@ -159,8 +161,8 @@ void Display::updateIR(int value){
 
 void Display::updateUV(int value){
 	_display.setFont();
-	_display.setCursor(0, _cursor);
-	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
+	_display.setCursor(0, 45);
+//	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
 	_display.print("UV ");
 	_display.println(value);
 
@@ -170,8 +172,8 @@ void Display::updateUV(int value){
 
 void Display::updateMode(byte mode){
 	_display.setFont();
-	_display.setCursor(0, _cursor);
-	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
+	_display.setCursor(64, 0);
+//	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
 	if(mode == 0){
 		_display.print("photo");
 	} else if(mode == 1){
@@ -234,4 +236,12 @@ void Display::updateGain(int gain){
 	_display.println(gain);
 
 	_cursor = _display.getCursorY() + LINE_OFFSET;
+}
+
+void Display::ln(){
+	_display.println();
+}
+
+void Display::setPosition(byte x, byte y){
+	_display.setCursor(x, y);
 }

@@ -70,6 +70,9 @@ public:
 
 	void updateGain(int gain);
 
+	void ln();
+	void setPosition(byte x, byte y);
+
 private:
 	Adafruit_SSD1306 _display;
 	byte _cursor, _posAperture, _posSpeed, _posIso, _posEV, _posMode;
