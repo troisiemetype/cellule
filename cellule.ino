@@ -36,6 +36,8 @@
 #define MODE_COLLODION 		1
 #define MODE_UV 			2
 
+#define RATIO_UV			60
+
 //tables for valid apertures, sensivities and speeds
 float aperture[20] = {0.7, 1, 1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22, 32, 44, 64, 88, 128, 196, 256, 392, 512};
 float sensivity[14] = {0.7, 1.5, 3, 6, 12, 25, 50, 100, 200, 400, 800, 1600, 3200, 6400};
@@ -57,6 +59,7 @@ float uv = 0;
 
 //var for ev.
 float ev = 0;
+float lv = 0;
 
 //values set to eeprom, and their adresses
 unsigned char aIndexAddr = 0;
@@ -87,6 +90,10 @@ PushButton btnHold = PushButton();
 void setup(){
 
 	Serial.begin(115200);
+
+	mode = MODE_COLLODION;
+	sIndex = 0;
+	aIndex = 7;
 
 	// Init encoder
 	wheel.begin(4, 5, Encoder::QUAD_STEP);
@@ -129,44 +136,31 @@ void initDevices(){
 
 	light.init();
 
-	blue.init();
+	blue.init(VEML6070::SINGLE);
+//	blue.enable();
+
+	Wire.setClock(400000L);
 
 }
 
 void loop(){
-//	Serial.print("blue: ");
-//	Serial.println(blue.read());
-
-//	Serial.print("Gain: ");
-//	Serial.println(light.update());
-/*
-	Serial.print("ratio: ");
-	Serial.println(light.getRatio());
-	
-	Serial.print("full: ");
-	Serial.println(light.readFull());
-
-	Serial.print("light: ");
-	Serial.println(light.readLight());
-
-	Serial.print("IR: ");
-	Serial.println(light.readIr());
-
-	Serial.print("lux full: ");
-	Serial.println(light.getLuxFull());
-
-	Serial.println("");
-*/
 
 	uint8_t update = 0;
 
 	//update reading only if a long enough time (250ms) has elapsed since last reading
 	mesureDelay = millis() - prevMillis;
-	if(mesureDelay > 250){
+	if(mesureDelay > 300){
 		update = 1;
+
+		if((mode == MODE_PHOTO) || (mode == MODE_COLLODION)){
+			light.update();
+			lux = light.getLux();
+		}
+
+		if((mode == MODE_COLLODION) || (mode == MODE_UV)){
+			uv = blue.read();
+		}
 		prevMillis = millis();
-		light.update();
-		lux = light.getLux();
 	}
 
 	btnIso.update();
@@ -177,36 +171,67 @@ void loop(){
 		update = 1;
 		int8_t step = wheel.getStep();
 		if(btnIso.isPressed()){
+			// Changing iso
 			if(step < 0 && sIndex > 0) --sIndex;
 			if(step > 0 && sIndex < 13) ++sIndex;
+		} else if(btnMenu.isPressed()){
+			// Changing mode
+			if(step < 0 && mode > 0) --mode;
+			if(step > 0 && mode < 2) ++mode;			
 		} else {
+			// Changing aperture value
 			if(step < 0 && aIndex > 0) --aIndex;
 			if(step > 0 && aIndex < 19) ++aIndex;
 		}
 	}
-	
-	//Compute speed and ev.
-	speed = pow(aperture[aIndex], 2) * DEVICE_FACTOR / (lux * sensivity[sIndex]);
-	ev = log(pow(aperture[aIndex], 2))/log(2) + log(1/speed)/log(2);
 
-	//format the speed value, for displaying in minutes, seconds or fractionnal form
-	if(speed >= 1){
-		speedMode = SPEED_SECONDS;
-	} else if(speed >= 60){
-		speedMode = SPEED_MINUTES;
-	} else {
-		speedMode = SPEED_NORMAL;
-		for (unsigned char i = 0; i < 13; i++){
-			if ((1 / speed) <= speeds[i]){
-				speed = speeds[i];
-				break;
+	if(update){
+
+		float fullLV = 0;
+
+		// Compute speed and ev.
+		// lv = log(2)(lux) - 1.32
+		// 1.32 is given by the correspondance table between LV and lux.
+		lv = (log(lux) / log(2)) - 1.32;
+		fullLV = lv;
+
+		if(mode == MODE_COLLODION){
+			fullLV = (lv * (100 - RATIO_UV) + uv * RATIO_UV) / 100;
+		}
+
+		// compute EV from LV
+		ev = fullLV + (log(sensivity[sIndex] / 100) / log(2));
+
+		// Compute speed given aperture and EV
+		speed = 
+
+/*
+		// First version, before lv pre-compute
+
+		// speed = aperture square * device factor / (lux * sensivity)
+		speed = pow(aperture[aIndex], 2) * DEVICE_FACTOR / (lux * sensivity[sIndex]);
+
+		// EV = log(2)(aperture square) + log(2)(1/speed)
+		ev = log(pow(aperture[aIndex], 2))/log(2) + log(1/speed)/log(2);
+*/
+		//format the speed value, for displaying in minutes, seconds or fractionnal form
+		if(speed >= 300){
+			speedMode = SPEED_MINUTES;
+			speed /= 60;
+		} else if(speed >= 1){
+			speedMode = SPEED_SECONDS;
+		} else {
+			speedMode = SPEED_NORMAL;
+			for (unsigned char i = 0; i < 13; i++){
+				if ((1 / speed) <= speeds[i]){
+					speed = speeds[i];
+					break;
+				}
 			}
 		}
+
+		updateDisplay();
 	}
-
-	if(update == 1) updateDisplay();
-
-//	updateDisplay();
 
 	return;
 
@@ -235,9 +260,10 @@ void updateDisplay(){
 
 //	display.updateGain(light.update());
 
-	display.updateEV(ev);
+	display.updateLV(lv);
+	if((mode == MODE_PHOTO) || (mode == MODE_COLLODION)) display.updateEV(ev);
 //	display.updateIR(ir);
-	display.updateUV(uv);
+	if((mode == MODE_COLLODION) || (mode == MODE_UV)) display.updateUV(uv);
 //	display.updateBarEV(ev);
 
 //	display.showBars(0);

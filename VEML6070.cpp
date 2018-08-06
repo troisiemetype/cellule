@@ -57,10 +57,10 @@ void VEML6070::disable(){
 void VEML6070::_set(bool _ack, bool _ack_th, byte _sens, bool _shutdown) const{
 	byte init_byte = VEML6070_DEFAULT;
 
-	init_byte |= _ack && VEML6070_ACK;
-	init_byte |= _ack_th && VEML6070_ACK_TH;
+	init_byte |= _ack << VEML6070_ACK;
+	init_byte |= _ack_th << VEML6070_ACK_TH;
 	init_byte |= _sens << VEML6070_IT;
-	init_byte |= _shutdown && VEML6070_SD;
+	init_byte |= _shutdown << VEML6070_SD;
 
 	Wire.beginTransmission(VEML6070_ADDRESS);
 	Wire.write(init_byte);
@@ -100,6 +100,7 @@ unsigned int VEML6070::read(){
 
 	value = Wire.read();
 	value = value << 8;
+
 
 	Wire.requestFrom(VEML6070_LSB, 1);
 	value |= Wire.read();

@@ -135,9 +135,19 @@ void Display::updateIso(float value){
 
 }
 
-void Display::updateEV(float value){
+void Display::updateLV(float value){
 	_display.setFont();
 	_display.setCursor(0, 35);
+	_display.print("LV ");
+	_display.println(value, 1);
+
+	_cursor = _display.getCursorY() + LINE_OFFSET;
+
+}
+
+void Display::updateEV(float value){
+	_display.setFont();
+	_display.setCursor(0, 45);
 //	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
 	_display.print("EV ");
 	_display.println(value, 1);
@@ -153,18 +163,18 @@ void Display::updateIR(int value){
 	_display.setCursor(0, 45);
 //	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
 	_display.print("IR ");
-	_display.println(value);
+	_display.print(value);
 
 	_cursor = _display.getCursorY() + LINE_OFFSET;
 
 }
 
-void Display::updateUV(int value){
+void Display::updateUV(uint16_t value){
 	_display.setFont();
-	_display.setCursor(0, 45);
+	_display.setCursor(0, 55);
 //	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
 	_display.print("UV ");
-	_display.println(value);
+	_display.print(value);
 
 	_cursor = _display.getCursorY() + LINE_OFFSET;
 

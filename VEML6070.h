@@ -50,22 +50,24 @@
 #define VEML6070_IT				(1 << 2)
 #define VEML6070_SD 			(1 << 0)
 
-//Used to simplify implementation of different intergration time from user program
-typedef enum VEML6070_integration{
-	VEML6070_HALF,
-	VEML6070_SINGLE,
-	VEML6070_DOUBLE,
-	VEML6070_QUADRUPLE,
-} integration_time;
+
 
 class VEML6070{
 
 public:
 
+	//Used to simplify implementation of different intergration time from user program
+	enum VEML6070_integration{
+		HALF,
+		SINGLE,
+		DOUBLE,
+		QUADRUPLE,
+	};
+
 	VEML6070();
 	~VEML6070();
 
-	void init(byte _sensivity = VEML6070_SINGLE);
+	void init(byte _sensivity = SINGLE);
 
 	void enable();
 	void disable();
