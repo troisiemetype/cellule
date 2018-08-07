@@ -57,6 +57,8 @@ float lux = 0;
 float ir = 0;
 float uv = 0;
 
+int16_t gain;
+
 //var for ev.
 float ev = 0;
 float lv = 0;
@@ -153,7 +155,7 @@ void loop(){
 		update = 1;
 
 		if((mode == MODE_PHOTO) || (mode == MODE_COLLODION)){
-			light.update();
+			gain = light.update();
 			lux = light.getLux();
 		}
 
@@ -207,7 +209,7 @@ void loop(){
 		// ev = log(2)(A square / S) = log(2)(A square) - log(2)(S)
 		// log(2)(S) = log(2)(A square) - ev
 		// S = exp(2)(log(2)(A square) - ev)
-		speed = pow(2, ((log(aperture[aIndex]) / log(2)) - ev));
+		speed = pow(2, ((log(pow(aperture[aIndex], 2)) / log(2)) - ev));
 
 /*
 		// First version, before lv pre-compute
@@ -262,7 +264,7 @@ void updateDisplay(){
 
 	display.updateSpeed(speed, speedMode);
 
-//	display.updateGain(light.update());
+	display.updateGain(gain);
 
 	display.updateLV(lv);
 	if((mode == MODE_PHOTO) || (mode == MODE_COLLODION)) display.updateEV(ev);

@@ -240,12 +240,9 @@ void Display::drawLogo(byte x, byte y, byte size){
 
 void Display::updateGain(int gain){
 	_display.setFont();
-	_display.setCursor(0, _cursor);
-	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
+	_display.setCursor(64, 55);
 	_display.print("gain ");
-	_display.println(gain);
-
-	_cursor = _display.getCursorY() + LINE_OFFSET;
+	_display.print(gain);
 }
 
 void Display::ln(){
