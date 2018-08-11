@@ -37,7 +37,8 @@
 #define MODE_UV 			2
 
 #define RATIO_UV			30
-#define COEF_UV				3.5F
+#define COEF_UV				2F
+#define OFFSET_UV			8F
 
 //tables for valid apertures, sensivities and speeds
 float aperture[20] = {0.7, 1, 1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22, 32, 44, 64, 88, 128, 196, 256, 392, 512};
@@ -185,7 +186,7 @@ void loop(){
 		uv = blue.read();
 //		uv = log(34 * uv) / log(2);
 		// Maybe the right solution
-		uv = COEF_UV * log(uv + 1) / log(2);
+		uv = COEF_UV * log(uv + 1) / log(2) + OFFSET_UV;
 
 		uvTime = millis() + uvDelay;
 	}
@@ -208,6 +209,7 @@ void loop(){
 
 	if(wheel.update()){
 		update = 1;
+
 		int8_t step = wheel.getStep();
 		if(btnIso.isPressed()){
 			// Changing iso
@@ -233,6 +235,13 @@ void loop(){
 		// This way of computing gives a max difference of 0.2 LV from the one using device factor
 		lv = (log(lux) / log(2)) - 1.3219;
 		full = lv;
+/*
+		Serial.print(lux);
+		Serial.print('\t');
+		Serial.print('\t');
+		Serial.print(uv);
+		Serial.println();
+*/
 
 		// Compute the speed for collodion, using UV reading.
 		if(mode == MODE_COLLODION){
