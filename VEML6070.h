@@ -42,6 +42,7 @@
 #define VEML6070_ADDRESS		0x38
 #define VEML6070_LSB			0x38
 #define VEML6070_MSB			0x39
+#define VEML6070_ARA			0x0C
 
 //sensor flags for sensor setup
 #define VEML6070_DEFAULT		0x02
@@ -76,6 +77,8 @@ public:
 	void setAck(bool);
 	void setAckTh(bool);
 	void setShutdown(bool);
+
+	void clearARA();
 
 	unsigned int read();
 	unsigned int lastReading() const;

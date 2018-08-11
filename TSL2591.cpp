@@ -88,21 +88,6 @@ int TSL2591::update(){
 //		delay(250);
 	}
 
-/*
-	Serial.print("gain: ");
-	Serial.println(gain);
-	
-	Serial.print("full: ");
-	Serial.println(readFull());
-
-	Serial.print("light: ");
-	Serial.println(readLight());
-
-	Serial.print("IR: ");
-	Serial.println(readIr());
-
-	Serial.println();
-*/
 	return gain;
 }
 
@@ -144,7 +129,11 @@ unsigned long TSL2591::getLux(){
 //	lux1 = ((float)full - TSL2591_COEFB * (float)ir) * cpl;
 //	lux2 = (TSL2591_COEFC * (float)full - TSL2591_COEFD * (float)ir) / cpl;
 
-	luxLight = lux1 > lux2 ? lux1 : lux2;
+	if(lux1 > lux2){
+		luxLight = lux1;
+	} else {
+		luxLight = lux2;
+	}
 /*
 	Serial.print("lux 1: ");
 	Serial.println(lux1);

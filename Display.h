@@ -54,14 +54,17 @@ public:
 
 	void updateAperture(float value);
 	void updateSpeed(int value, byte mode = 0);
+	void updateSpeedCol(int value, byte mode = 0);
 	void updateIso(float value);
 	void updateLV(float value);
 	void updateEV(float value);
 	void updateIR(int value);
-	void updateUV(uint16_t value);
+	void updateFLV(float value);
+	void updateUV(int16_t value);
 	void updateMode(byte mode);
 
 	void showBars(bool value);
+	void showHold();
 
 	void updateBarEV(float value);
 	void updateBarIR(float value);

@@ -52,10 +52,10 @@
 #define TSL2591_CONTROL_ATIME				(1 << 0)		//Mesuring time setting
 
 //control register gain values
-#define TSL2591_CONTROL_GAIN_LOW			0x00 << 4		//Values for gain setting above
-#define TSL2591_CONTROL_GAIN_MEDIUM			0x01 << 4
-#define TSL2591_CONTROL_GAIN_HIGH			0x02 << 4
-#define TSL2591_CONTROL_GAIN_MAX			0x03 << 4
+#define TSL2591_CONTROL_GAIN_LOW			(0x00 << 4)		//Values for gain setting above
+#define TSL2591_CONTROL_GAIN_MEDIUM			(0x01 << 4)
+#define TSL2591_CONTROL_GAIN_HIGH			(0x02 << 4)
+#define TSL2591_CONTROL_GAIN_MAX			(0x03 << 4)
 
 //control register time values
 #define TSL2591_CONTROL_TIME_100			0x00			//Values for time setting above
@@ -67,7 +67,7 @@
 
 //values for lux computing
 #define TSL2591_COUNT_PER_LUX				38.649F			//Number of ALS counts for one lux
-#define TSL2591_W_PER_LUMEN					338.0F			//73 lumen per W for 650nm
+#define TSL2591_W_PER_LUMEN					220.0F			//73 lumen per W for 650nm // 338.0F
 #define TSL2591_LUX_DF						38000			//Coef to compute CPL
 #define TSL2591_LUX_CH1_CF1					2.1F			//Coef for sun light
 #define TSL2591_LUX_CH0_CF2					0.59F			//Coef for tungsten light

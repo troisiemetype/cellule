@@ -36,7 +36,8 @@
 #define MODE_COLLODION 		1
 #define MODE_UV 			2
 
-#define RATIO_UV			60
+#define RATIO_UV			30
+#define COEF_UV				3.5F
 
 //tables for valid apertures, sensivities and speeds
 float aperture[20] = {0.7, 1, 1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22, 32, 44, 64, 88, 128, 196, 256, 392, 512};
@@ -50,12 +51,15 @@ int speeds[13] = {2, 4, 8, 15, 30, 60, 125, 250, 500, 1000, 2000, 4000, 8000};
 
 //default speed value, and speed mode
 float speed = 1;
+float speedCol = 1;
 unsigned char speedMode = 0;
+unsigned char speedUMode = 0;
 
 //vars for lux, ir and uv.
 float lux = 0;
 float ir = 0;
 float uv = 0;
+float full = 0;
 
 int16_t gain;
 
@@ -73,10 +77,18 @@ unsigned char sIndex = EEPROM.read(sIndexAddr);
 unsigned char mode = EEPROM.read(modeAddr);
 
 
-//Timer used to update readings
-long prevMillis = millis();
-int mesureDelay = 0;
+// Timer used to update readings
+int16_t lightDelay = 250;
+int32_t lightTime = millis();
+int16_t uvDelay = 250;
+int32_t uvTime = millis();
+
 long sleepDelay = millis();
+
+// Timer use for holding last reading.
+int16_t holdDelay = 10000;
+int32_t	holdTime = millis();
+bool hold = false;
 
 TSL2591 light = TSL2591();
 VEML6070 blue = VEML6070();
@@ -93,6 +105,8 @@ void setup(){
 
 	Serial.begin(115200);
 
+//	mode = MODE_PHOTO;
+//	sIndex = 7;
 	mode = MODE_COLLODION;
 	sIndex = 0;
 	aIndex = 7;
@@ -125,7 +139,8 @@ void setup(){
 	}
 
 	//Wait enough for a reading to be made
-	while((millis() - prevMillis) < 1000);
+	lightTime = millis() + 1000;
+	while(millis() < lightTime);
 
 //	Serial.println("started");
 
@@ -138,7 +153,9 @@ void initDevices(){
 
 	light.init();
 
-	blue.init(VEML6070::SINGLE);
+	blue.clearARA();
+	blue.init();
+	blue.setSensivity(VEML6070::SINGLE);
 //	blue.enable();
 
 	Wire.setClock(400000L);
@@ -149,25 +166,45 @@ void loop(){
 
 	uint8_t update = 0;
 
-	//update reading only if a long enough time (250ms) has elapsed since last reading
-	mesureDelay = millis() - prevMillis;
-	if(mesureDelay > 300){
+	// update light reading only if a long enough time (250ms) has elapsed since last reading
+	if((millis() > lightTime) && (hold == false) && ((mode == MODE_PHOTO) || (mode == MODE_COLLODION))){
 		update = 1;
 
-		if((mode == MODE_PHOTO) || (mode == MODE_COLLODION)){
-			gain = light.update();
-			lux = light.getLux();
-		}
+		gain = light.update();
+		lux = light.getLux();
 
-		if((mode == MODE_COLLODION) || (mode == MODE_UV)){
-			uv = blue.read();
-		}
-		prevMillis = millis();
+		lightTime = millis() + lightDelay;
+	}
+
+	// Update uv reading only if a long enough time has elapsed since last reading.
+	// This is separated from light reading so as to test if less readings increase sensivity.
+	if((millis() > uvTime) && (hold == false) && ((mode == MODE_COLLODION) || (mode == MODE_UV))){
+		update = 1;
+
+//		blue.clearARA();
+		uv = blue.read();
+//		uv = log(34 * uv) / log(2);
+		// Maybe the right solution
+		uv = COEF_UV * log(uv + 1) / log(2);
+
+		uvTime = millis() + uvDelay;
 	}
 
 	btnIso.update();
 	btnMenu.update();
 	btnHold.update();
+
+	if(btnHold.justReleased()){
+		if(hold){
+			hold = false;
+		} else {
+			holdTime = millis() + holdDelay;
+			hold = true;
+		}
+		updateDisplay();
+	}
+
+	if((hold) && (millis() > holdTime))	hold = false;
 
 	if(wheel.update()){
 		update = 1;
@@ -187,23 +224,42 @@ void loop(){
 		}
 	}
 
-	if(update){
 
-		float fullLV = 0;
+	if(update){
 
 		// Compute speed and ev.
 		// lv = log(2)(lux) - 1.32
 		// 1.32 is given by the correspondance table between LV and lux.
 		// This way of computing gives a max difference of 0.2 LV from the one using device factor
-		lv = (log(lux) / log(2)) - 1.32;
-		fullLV = lv;
+		lv = (log(lux) / log(2)) - 1.3219;
+		full = lv;
 
+		// Compute the speed for collodion, using UV reading.
 		if(mode == MODE_COLLODION){
-			fullLV = (lv * (100 - RATIO_UV) + uv * RATIO_UV) / 100;
+			full = (lv * (100 - RATIO_UV) + uv * RATIO_UV) / 100;
+			/*
+			float uev = uv + (log(sensivity[sIndex] / 100) / log(2));
+			speedCol = pow(2, ((log(pow(aperture[aIndex], 2)) / log(2)) - uev));
+
+			if(speedCol >= 300){
+				speedUMode = SPEED_MINUTES;
+				speedCol /= 60;
+			} else if(speedCol >= 1){
+				speedUMode = SPEED_SECONDS;
+			} else {
+				speedUMode = SPEED_NORMAL;
+				for (unsigned char i = 0; i < 13; i++){
+					if ((1 / speedCol) <= speeds[i]){
+						speedCol = speeds[i];
+						break;
+					}
+				}
+			}
+			*/
 		}
 
 		// compute EV from LV
-		ev = fullLV + (log(sensivity[sIndex] / 100) / log(2));
+		ev = full + (log(sensivity[sIndex] / 100) / log(2));
 
 		// Compute speed given aperture and EV
 		// ev = log(2)(A square / S) = log(2)(A square) - log(2)(S)
@@ -252,6 +308,14 @@ void loop(){
 	}
 }
 
+bool updateLight(){
+
+}
+
+bool updateUV(){
+
+}
+
 void updateDisplay(){
 	//Display the updated values.
 	//Todo: update only when the button has been pushed, or the increment wheel turned.
@@ -264,15 +328,21 @@ void updateDisplay(){
 
 	display.updateSpeed(speed, speedMode);
 
-	display.updateGain(gain);
+//	if(mode == MODE_COLLODION) display.updateSpeedCol(speedCol, speedUMode);
+
+//	display.updateGain(gain);
 
 	display.updateLV(lv);
-	if((mode == MODE_PHOTO) || (mode == MODE_COLLODION)) display.updateEV(ev);
+//	if((mode == MODE_PHOTO) || (mode == MODE_COLLODION)) display.updateEV(ev);
 //	display.updateIR(ir);
-	if((mode == MODE_COLLODION) || (mode == MODE_UV)) display.updateUV(uv);
+	if((mode == MODE_COLLODION) || (mode == MODE_UV)){
+		display.updateFLV(full);
+		display.updateUV(uv);
+	}
 //	display.updateBarEV(ev);
 
 //	display.showBars(0);
+	if(hold) display.showHold();
 
 	display.update();
 

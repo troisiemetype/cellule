@@ -118,6 +118,20 @@ void Display::updateSpeed(int value, byte mode){
 
 }
 
+void Display::updateSpeedCol(int value, byte mode){
+	_display.setFont(&FreeSerifItalic9pt7b);
+	_display.setCursor(64, 45);
+	if(mode == SPEED_NORMAL){
+		_display.print("1/");
+	}
+	_display.print(value);
+	if(mode == SPEED_SECONDS){
+		_display.print("s");
+	} else if(mode == SPEED_MINUTES){
+		_display.print("m");
+	}
+}
+
 void Display::updateIso(float value){
 	_display.setFont();
 	_display.setCursor(0, 0);
@@ -169,9 +183,20 @@ void Display::updateIR(int value){
 
 }
 
-void Display::updateUV(uint16_t value){
+void Display::updateFLV(float value){
 	_display.setFont();
 	_display.setCursor(0, 55);
+//	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
+	_display.print("full ");
+	_display.print(value);
+
+	_cursor = _display.getCursorY() + LINE_OFFSET;
+
+}
+
+void Display::updateUV(int16_t value){
+	_display.setFont();
+	_display.setCursor(0, 45);
 //	_display.fillRect(0, _cursor - LINE_OFFSET, 62, 10 + LINE_OFFSET, BLACK);
 	_display.print("UV ");
 	_display.print(value);
@@ -214,6 +239,13 @@ void Display::showBars(bool value){
 	_display.drawFastVLine(55, 95, 6, WHITE);
 	_display.drawFastVLine(58, 95, 15, WHITE);
 	_display.drawFastVLine(61, 95, 24, WHITE);
+
+}
+
+void Display::showHold(){
+	_display.setFont();
+	_display.setCursor(104, 55);
+	_display.print("hold");
 
 }
 
