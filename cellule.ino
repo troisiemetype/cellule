@@ -36,9 +36,10 @@
 #define MODE_COLLODION 		1
 #define MODE_UV 			2
 
-#define RATIO_UV			30
-#define COEF_UV				2F
-#define OFFSET_UV			8F
+#define RATIO_UV			33.0F
+#define COEF_UV				4.0F
+#define OFFSET_UV			4.0F
+#define BASE_LOG_UV			2.0F
 
 //tables for valid apertures, sensivities and speeds
 float aperture[20] = {0.7, 1, 1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22, 32, 44, 64, 88, 128, 196, 256, 392, 512};
@@ -125,8 +126,8 @@ void setup(){
 
 	initDevices();
 
-	display.drawLogo(0, 0, 25);
-	display.update();
+//	display.drawLogo(0, 0, 25);
+//	display.update();
 
 	//verify the values from eeprom. If not correct, set it to default
 	if(aIndex > (sizeof(aperture)/sizeof(float) - 1)){
@@ -186,7 +187,7 @@ void loop(){
 		uv = blue.read();
 //		uv = log(34 * uv) / log(2);
 		// Maybe the right solution
-		uv = COEF_UV * log(uv + 1) / log(2) + OFFSET_UV;
+		uv = COEF_UV * log(uv + 1) / log(BASE_LOG_UV) + OFFSET_UV;
 
 		uvTime = millis() + uvDelay;
 	}

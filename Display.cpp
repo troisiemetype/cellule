@@ -39,6 +39,7 @@ void Display::begin(){
 	_display.clearDisplay();
 	_display.setTextColor(WHITE);
 	_display.setRotation(0);
+	_display.dim(0);
 
 	//Debugging purpose: set a rule on the left border, used to count rows
 /*	
